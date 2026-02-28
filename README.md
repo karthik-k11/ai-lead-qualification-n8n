@@ -93,7 +93,7 @@ POST /webhook/lead-qualification
 
 ## Deployment Steps
 
-1. Import workflow.json into n8n.
+1. Import AI Lead Qualification Engine.json into n8n.
 
 2. Configure Custom Auth credential with OpenRouter API key.
 
