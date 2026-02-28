@@ -89,3 +89,28 @@ POST /webhook/lead-qualification
   "budget": 15000,
   "country": "India"
 }
+```
+
+## Deployment Steps
+
+1. Import workflow.json into n8n.
+
+2. Configure Custom Auth credential with OpenRouter API key.
+
+3. Configure Google Sheets OAuth credential.
+
+4. Configure Webhook Header Authentication.
+
+5. Publish workflow.
+
+6. Use Production Webhook URL.
+
+## Tech Stack
+
+- n8n
+
+- OpenRouter (LLM API)
+
+- Google Sheets API
+
+- Webhook-based REST architecture
