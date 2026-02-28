@@ -9,6 +9,11 @@ Incoming leads are received via a webhook, scored using an LLM API (OpenRouter),
 The workflow is deployed in production mode with secure API key protection.
 
 ---
+## Workflow Architecture
+
+![Workflow Architecture](Workflow_Architecture.png)
+
+---
 
 ## Features
 
