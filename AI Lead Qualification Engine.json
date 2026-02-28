@@ -1,0 +1,425 @@
+{
+  "name": "AI Lead Qualification Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualification",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "31fc729b-9252-481b-a10a-1ceb43e71b5e",
+      "name": "Webhook",
+      "webhookId": "9f852c08-075a-4b6c-8883-ff3562f82ed6",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CI9MLGl2KWoSrz9t",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"temperature\": 0.2,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an AI sales lead scoring engine. Always respond ONLY in valid JSON. No explanation. No extra text.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze this lead and return structured JSON.\\n\\nName: {{$json.body.name}}\\nRole: {{$json.body.role}}\\nCompany: {{$json.body.company}}\\nIndustry: {{$json.body.industry}}\\nBudget: {{$json.body.budget}}\\nCountry: {{$json.body.country}}\\n\\nReturn strictly in this format:\\n{\\n  \\\"lead_temperature\\\": \\\"Hot | Warm | Cold\\\",\\n  \\\"score\\\": number (1-100),\\n  \\\"industry_classification\\\": \\\"string\\\",\\n  \\\"priority_reason\\\": \\\"short explanation\\\",\\n  \\\"personalized_message\\\": \\\"3-4 line outreach message\\\"\\n}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5df9754d-3ea7-4c7b-976c-c66c39ebac03",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CI9MLGl2KWoSrz9t",
+          "name": "Header Auth account"
+        },
+        "httpCustomAuth": {
+          "id": "cpl3VpzUTGyYQF8K",
+          "name": "Custom Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8b69c64-b4d5-4d97-ac34-5b13b970b982",
+              "name": "ai_result",
+              "value": "={{ JSON.parse($json.choices[0].message.content) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e9d9f093-1085-4af3-a664-705902a2aa1b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1e9aa90-9273-44d3-a02c-d98facc1a757",
+              "leftValue": "={{ $json.ai_result.score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "71b8db22-e9de-4884-9966-8399e119edb3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "592ac514-dcbb-402d-a326-ccc7e4f9a893",
+              "name": "routing_team",
+              "value": "Inside Sales",
+              "type": "string"
+            },
+            {
+              "id": "cd9eafd6-f1cc-4bfb-9971-21449caeebe1",
+              "name": "final_score",
+              "value": "={{ $json.ai_result.score }}",
+              "type": "number"
+            },
+            {
+              "id": "0ea41deb-4e15-46e4-a354-0fbafc703970",
+              "name": "lead_temperature",
+              "value": "={{ $json.ai_result.lead_temperature }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "email",
+              "value": "={{ $('Webhook').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "company",
+              "value": "={{ $('Webhook').item.json.body.company }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "416fb74f-41c6-4ed1-a83f-1c3796672f10",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "321a3168-a31a-4092-bf2c-6ac1f85fe8ab",
+              "name": "routing_team",
+              "value": "Nurture Campaign",
+              "type": "string"
+            },
+            {
+              "id": "4ecdf0b8-c35b-4809-ae44-b15de1e6ab34",
+              "name": "final_score",
+              "value": "={{ $json.ai_result.score }}",
+              "type": "number"
+            },
+            {
+              "id": "1a606c18-8791-4029-a476-6c7a15beb991",
+              "name": "lead_temperature",
+              "value": "={{ $json.ai_result.lead_temperature }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "email",
+              "value": "={{ $('Webhook').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "company",
+              "value": "={{ $('Webhook').item.json.body.company }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        144
+      ],
+      "id": "72831c45-cc26-446c-b1b3-a1f1ebf690b0",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1k-acsYxL9CoyIq1GVU1H8SfmWs4Uk5fQJQ4r8G0vlS4",
+          "mode": "list",
+          "cachedResultName": "AI_Lead_Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k-acsYxL9CoyIq1GVU1H8SfmWs4Uk5fQJQ4r8G0vlS4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1k-acsYxL9CoyIq1GVU1H8SfmWs4Uk5fQJQ4r8G0vlS4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "company": "={{ $json.company }}",
+            "final_score": "={{ $json.final_score }}",
+            "lead_temperature": "={{ $json.lead_temperature }}",
+            "routing_team": "={{ $json.routing_team }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final_score",
+              "displayName": "final_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_temperature",
+              "displayName": "lead_temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "routing_team",
+              "displayName": "routing_team",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1008,
+        -144
+      ],
+      "id": "8f8e4f69-ba18-4439-9f71-9d6bc97de21c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "O3pyYRmdzjm3eVHU",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "3811e6d8-33ec-41ff-8740-ef8e6b6daf5a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "44011c94ea1d139ee5c941e87b1885dd784a9063010c0bcf55f3589d867d4e93"
+  },
+  "id": "wvkBua1Z2qFIBidw",
+  "tags": []
+}
